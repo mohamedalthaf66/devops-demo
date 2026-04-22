@@ -1,9 +1,9 @@
 replicaCount: 2
 
 image:
-  repository: my-app
+  repository: devops-demo
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 service:
   type: ClusterIP
