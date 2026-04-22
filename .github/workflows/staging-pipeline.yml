@@ -104,8 +104,8 @@ jobs:
           git fetch origin gitops
           git checkout gitops
 
-          sed -i "s/tag:.*/tag: $TAG/" helm/values.yaml
+          sed -i "s/tag:.*/tag: $TAG/" helm/my-app/templates/values.yaml
 
-          git add helm/values.yaml
-          git commit -m "chore: update image tag $TAG"
+          git add helm/my-app/templates/values.yaml
+          git commit -m "update image tag $TAG"
           git push origin gitops
