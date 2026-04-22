@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: myregistry.azurecr.io/devops-demo
+  repository: devacrregistry123.azurecr.io/devops-demo
   tag: latest
   pullPolicy: Always
 
