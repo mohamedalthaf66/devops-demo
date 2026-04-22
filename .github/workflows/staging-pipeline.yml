@@ -5,47 +5,71 @@ on:
     branches:
       - staging
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+env:
+  REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
+  IMAGE_NAME: devops-demo
+  TAG: staging-${{ github.sha }}
+  IMAGE: ${{ secrets.ACR_LOGIN_SERVER }}/devops-demo
 
-    env:
-      IMAGE_NAME: devops-demo
-      REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
-      TAG: staging-${{ github.sha }}
+jobs:
+
+  security-scans:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v7.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+
+      - name: Trivy FS Scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          severity: HIGH,CRITICAL
+          exit-code: 1
+
+  build:
+    runs-on: ubuntu-latest
+    needs: security-scans
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 🧠 SonarCloud Scan
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7.1.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # Enable Docker caching (BIG SPEED BOOST)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # 📦 Dependency Scan (OWASP)
-      - name: OWASP Dependency Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: "devops-demo"
-          path: "."
-          format: "HTML"
-
-      # 🐳 Build Docker Image
-      - name: Build Docker Image
+      - name: Build Docker Image (cached)
         run: |
-          docker build -t $REGISTRY/$IMAGE_NAME:$TAG .
+          docker build \
+            --cache-from=type=gha \
+            --cache-to=type=gha,mode=max \
+            -t $IMAGE:$TAG .
 
-      # 🔐 Trivy Scan (fail on HIGH/CRITICAL)
+
+  image-scan-and-push:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Trivy image scan (final gate)
       - name: Trivy Image Scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
-          severity: 'HIGH,CRITICAL'
+          image-ref: ${{ env.IMAGE }}:${{ env.TAG }}
+          severity: HIGH,CRITICAL
           exit-code: 1
 
-      # 🔑 Login to ACR
+      # Login to Azure Container Registry
       - name: Login to ACR
         run: |
           echo $ACR_PASSWORD | docker login $REGISTRY -u $ACR_USERNAME --password-stdin
@@ -53,12 +77,20 @@ jobs:
           ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
           ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
 
-      # 📤 Push Image
+      # Push image
       - name: Push Docker Image
         run: |
-          docker push $REGISTRY/$IMAGE_NAME:$TAG
+          docker push $IMAGE:$TAG
 
-      # 📝 Update Helm values.yaml
+
+  gitops-update:
+    runs-on: ubuntu-latest
+    needs: image-scan-and-push
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Update Helm values
         run: |
           git config user.name "github-actions"
@@ -67,9 +99,8 @@ jobs:
           git fetch origin gitops
           git checkout gitops
 
-          # update image tag
           sed -i "s/tag:.*/tag: $TAG/" helm/values.yaml
 
           git add helm/values.yaml
-          git commit -m "Update image tag to $TAG"
+          git commit -m "chore: update image tag $TAG"
           git push origin gitops
