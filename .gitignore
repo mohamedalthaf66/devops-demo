@@ -1,0 +1,13 @@
+node_modules/
+static/
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Ignore local config
+terraform.tfvars
+
+# OS junk
+.DS_Store
