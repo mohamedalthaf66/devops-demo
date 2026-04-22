@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: devops-demo
-  tag: latest
+  tag: staging-84ddd372631e18ccb30ab7896f7dbdc1f54ea105
   pullPolicy: Always
 
 service:
