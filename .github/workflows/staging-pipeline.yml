@@ -94,5 +94,5 @@ jobs:
           sed -i "s/tag:.*/tag: $TAG/" helm/my-app/values.yaml
 
           git add helm/my-app/values.yaml
-          git commit -m "update image tag $TAG"
+          git commit -m "update image tag with $TAG"
           git push origin gitops
