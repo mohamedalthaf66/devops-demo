@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: devacrregistry123.azurecr.io/devops-demo
-  tag: staging-260eeb7b88be554d85340f555d3678692d5b29cb
+  tag: latest
   pullPolicy: Always
 
 service:
