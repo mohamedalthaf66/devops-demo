@@ -8,12 +8,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   default_node_pool {
     name       = "system"
-    vm_size    = "Standard_D2s_v3"   # AMD64 ONLY
     node_count = 1
-
-    os_sku = "Ubuntu"
-
-    type = "VirtualMachineScaleSets"
+    vm_size    = "Standard_D2s_v3"
   }
 
   identity {
@@ -21,8 +17,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   network_profile {
-    network_plugin    = "azure"
-    load_balancer_sku = "standard"
+    network_plugin = "azure"
   }
 }
 
@@ -40,4 +35,28 @@ resource "azurerm_kubernetes_cluster_node_pool" "amd64" {
   node_labels = {
     "kubernetes.io/arch" = "amd64"
   }
+}
+
+
+resource "helm_release" "ingress_nginx" {
+  name       = "ingress-nginx"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "ingress-nginx"
+
+  create_namespace = true
+
+  set {
+    name  = "controller.service.type"
+    value = "LoadBalancer"
+  }
+
+  set {
+    name  = "controller.publishService.enabled"
+    value = "true"
+  }
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks
+  ]
 }
