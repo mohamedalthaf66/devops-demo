@@ -10,6 +10,7 @@ resource "helm_release" "argocd" {
 server:
   service:
     type: LoadBalancer
+    port: 443
 EOF
   ]
 }
