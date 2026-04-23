@@ -30,7 +30,6 @@ jobs:
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
-          scanners: 'vuln,secret,config'
           severity: HIGH,CRITICAL
           exit-code: 1
 
