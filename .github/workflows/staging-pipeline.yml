@@ -35,6 +35,7 @@ jobs:
 
 
   image-scan-and-push:
+    needs: security-scans
     runs-on: ubuntu-latest
 
     steps:
