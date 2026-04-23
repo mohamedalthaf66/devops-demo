@@ -21,4 +21,6 @@ app.get("/", (request, response) => {
 	`);
 });
 
-app.listen(PORT, () => console.log(`Example app listening on port ${PORT}.\n\nLoad it in your browser at http://localhost:${PORT}`))
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Example app listening on port ${PORT}`);
+});

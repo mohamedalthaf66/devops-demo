@@ -6,8 +6,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   default_node_pool {
     name       = "system"
-    node_count = 2
-    vm_size    = "Standard_D2ps_v6"
+    node_count = 1
+    vm_size    = "Standard_D2s_v3"
   }
 
   identity {
@@ -17,4 +17,28 @@ resource "azurerm_kubernetes_cluster" "aks" {
   network_profile {
     network_plugin = "azure"
   }
+}
+
+
+resource "helm_release" "ingress_nginx" {
+  name       = "ingress-nginx"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "ingress-nginx"
+
+  create_namespace = true
+
+  set {
+    name  = "controller.service.type"
+    value = "LoadBalancer"
+  }
+
+  set {
+    name  = "controller.publishService.enabled"
+    value = "true"
+  }
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks
+  ]
 }
