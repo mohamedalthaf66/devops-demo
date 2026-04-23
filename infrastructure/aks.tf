@@ -4,6 +4,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
   resource_group_name = azurerm_resource_group.rg.name
   dns_prefix          = "devaks"
 
+  sku_tier = "Free"
+
   default_node_pool {
     name       = "system"
     node_count = 1
@@ -16,6 +18,22 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   network_profile {
     network_plugin = "azure"
+  }
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "amd64" {
+  name                  = "amd64pool"
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+
+  vm_size    = "Standard_D2s_v3"   # AMD64 ONLY
+  node_count = 1
+
+  mode    = "User"
+  os_type = "Linux"
+  os_sku  = "Ubuntu"
+
+  node_labels = {
+    "kubernetes.io/arch" = "amd64"
   }
 }
 
