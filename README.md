@@ -171,9 +171,6 @@ terraform init
 terraform plan
 terraform apply
 ```
-
-> ⚠️ Replace local state with remote backend (Azure Storage) for production.
-
 ---
 
 ## 5️⃣ Configure Kubernetes Access
@@ -181,6 +178,12 @@ terraform apply
 ```bash
 az aks get-credentials --resource-group <rg> --name <aks-cluster>
 kubectl get nodes
+```
+Make sure to allow AKS to ACR access for ArgoCD to pull the image from the repo
+
+```bash
+az aks update --name <cluster_name> --resource-group <Resource_group> --attach-acr <Registry_name>
+
 ```
 
 ---
@@ -191,12 +194,6 @@ Apply ArgoCD application:
 
 ```bash
 kubectl apply -f argocd-app.yaml
-```
-
-Access ArgoCD UI:
-
-```bash
-kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
 ---
@@ -222,59 +219,4 @@ Pipeline will:
 * Image scanning via **Trivy**
 * Secrets managed via GitHub Secrets
 * RBAC enforced on AKS
-* `.trivyignore` for controlled exclusions
-
----
-
-# 📈 Production Best Practices
-
-* Use **remote Terraform backend** (Azure Storage)
-* Enable **AKS autoscaling (HPA)**
-* Add **monitoring** (Prometheus + Grafana)
-* Integrate **Azure Key Vault** for secrets
-* Use **separate environments** (dev/staging/prod)
-
----
-
-# 🧪 Local Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run backend
-node src/server/app.js
-
-# Run frontend (if configured)
-npm run start
-```
-
----
-
-# 📌 Roadmap
-
-* [ ] Multi-environment pipeline (dev/staging/prod)
-* [ ] Blue/Green or Canary deployments
-* [ ] Observability stack
-* [ ] Policy-as-Code (OPA / Kyverno)
-
----
-
-# 🤝 Contributing
-
-1. Fork the repo
-2. Create feature branch
-3. Commit changes
-4. Open Pull Request
-
----
-
-# 📄 License
-
-MIT License
-
----
-
-# 👨‍💻 Maintainer
-
-DevOps demo project for showcasing **real-world cloud-native CI/CD and GitOps workflows**.
+* `.trivyignore` and `.gitignore` for controlled exclusions
