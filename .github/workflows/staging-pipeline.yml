@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - staging
+    paths:
+      - 'helm/my-app/values.yaml'
 
 env:
   REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
