@@ -95,16 +95,23 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Update Helm values
+      - name: Sync staging and gitops Then update tag
         run: |
+          set -e
+
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
-          git fetch origin gitops
-          git checkout gitops
+       
+          git fetch origin
 
+          git checkout -B gitops origin/staging
+
+          # Update image tag
           sed -i "s/tag:.*/tag: $TAG/" helm/my-app/values.yaml
 
           git add helm/my-app/values.yaml
-          git commit -m "update image tag with $TAG"
-          git push origin gitops
+
+          git diff --cached --quiet || git commit -m "sync staging and gitops Then update tag $TAG"
+
+          git push origin gitops --force-with-lease
